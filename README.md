@@ -1,3 +1,3 @@
 # Spring-Boot-Mudi
 
-Projeto feito no curso da aluro sobre Spring Boot MVC + thymeleaf
+Projeto feito no curso da alura sobre Spring Boot MVC + thymeleaf
