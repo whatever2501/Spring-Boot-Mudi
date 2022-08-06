@@ -1,5 +1,6 @@
 package br.com.alura.mvc.mudi.controller;
 
+import java.security.Principal;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,25 +23,11 @@ public class HomeController {
 	private PedidoRepository pedidorepository;
 
 	@GetMapping
-	public ModelAndView home() {
-		List<Pedido> pedidos = pedidorepository.findAll();
+	public ModelAndView home(Principal principal) {
+		List<Pedido> pedidos = pedidorepository.findByStatus(StatusPedido.ENTREGUE);
 		ModelAndView mv = new ModelAndView("home");
 		mv.addObject("pedidos", pedidos);
 		return mv;
-	}
-
-	@GetMapping("/{status}")
-	public ModelAndView porStatus(@PathVariable("status") String status) {
-		List<Pedido> pedidos = pedidorepository.findByStatus(StatusPedido.valueOf(status.toUpperCase()));
-		ModelAndView mv = new ModelAndView("home");
-		mv.addObject("pedidos", pedidos);
-		mv.addObject("status", status);
-		return mv;
-	}
-
-	@ExceptionHandler(IllegalArgumentException.class)
-	public String onError() {
-		return "redirect:/home";
 	}
 
 }
