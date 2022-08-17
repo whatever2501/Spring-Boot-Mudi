@@ -1,41 +1,115 @@
 <html>
 	<head th:replace="~{base :: head}">	</head>
-	<body>
+	<body onload="onLoad()">
 		<div th:replace="~{base :: logo}"></div>
-		<div  class="container">
+		<div  class="container" id="ofertas">
 		<div th:replace="~{base :: titulo('Ultimos pedidos')}"></div>
 
 		
 			
-			<div class="card mb-3" th:each="pedido : ${pedidos}">
-			<th:block th:switch="${pedido.status.name()}">
-				<div th:case="'ENTREGUE'" class="card-header alert alert-dark" th:text="${pedido.nomeProduto}">Nome do produto</div>
-			</th:block>
+			<div class="card mb-3" v-for="pedido in pedidos">
+			
+				<div class="card-header alert alert-dark">{{pedido.nomeProduto}}</div>
+		
 
 				<div class="card-body">
 					<div class="row">
 						<div class="col-12 col-sm-8 mb-3">
-						<div class="row">
-							<div class="col-md-5">Valor: <span th:if="${pedido.valor} != null" th:text="${'R$' + #numbers.formatDecimal(pedido.valor,3,'POINT',2,'COMMA')}">200,99</span></div>
-							<div class="col-md-7">Data de Entrega: <span th:text="${#temporals.format(pedido.dataDaEntrega, 'dd/MM/yyyy')}">10/02/2020</span></div>
-						</div>
+						
 							<div>Produto</div>
-							<div> <input class="form-control" th:value="${pedido.urlProduto}" value="url do produto"></div>
+									<div> <a v-bind:href="pedido.urlProduto">{{pedido.nomeProduto}}</a></div>
 							
 							<div>Descrição</div>
 							<div>
-								<textarea class="form-control" th:text="${pedido.descricao}">descrição do pedido</textarea>
+								<textarea disabled ="disabled" class="form-control">{{pedido.descricao}}</textarea>
 							</div>
+							<div class="row mt-3">
+								<div class="col-md-5">
+									Valor: <input  v-bind:class="{'is-invalid':pedido.erros.valor !== ''}"  class="form-control" v-model="pedido.valor"/>
+									<div v-if="pedido.erros.valor" class="invalid-feedback" >
+										{{pedido.erros.valor}}
+									</div>
+								</div>
+							
+								
+								<div class="col-md-7">
+									Data de Entrega: <input  v-bind:class="{'is-invalid':pedido.erros.dataDaEntrega !== ''}" class="form-control" v-model="pedido.dataDaEntrega"/>
+									<div v-if="pedido.erros.dataDaEntrega" class="invalid-feedback" >
+										{{pedido.erros.dataDaEntrega}}
+									</div>
+								</div>
+								
+							</div>
+							<div class=" mt-2">
+								<label>Comentário</label>
+								<textarea  class="form-control"v-model="pedido.comentario"></textarea>
+							</div>
+							<button v-if="pedido.ofertaEnviada" class="btn btn-success mt-2" type="submit">Oferta Enviada</button>
+							<button v-else v-on:click="enviarOferta(pedido)" class="btn btn-primary mt-2" type="submit">Enviar Oferta</button>
 						</div>
+					
 						<div class="col-12 col-sm-4">
 							<div >
-									<img class ="img-thumbnail" th:src="${pedido.urlImagem}" src="">
+									<img class ="img-thumbnail" v-bind:src="pedido.urlImagem"/>
 							</div>
+							
 						</div>
 					</div>
 				</div>
 			</div>
 		</div>
+		<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+		<script>
+			function onLoad(){
+				var app = new Vue({
+					el: '#ofertas',
+					data : {
+						pedidos : []
+					},
+					mounted (){
+						axios
+						.get('http://localhost:8080/api/pedidos/aguardando')
+						.then(response => {
+							response.data.forEach(pedido =>{
+							 pedido.ofertaEnviada = false;
+							  pedido.erros = {
+								valor: '',
+								dataDaEntrega: ''
+							  }
+							})
+							this.pedidos = response.data
+							})							
+					},
+					methods:{
+						enviarOferta: function(pedido){
+							pedido.erros = {
+								valor: '',
+								dataDaEntrega: ''
+							  };
+							axios
+								.post('http://localhost:8080/api/ofertas',{
+									pedidoId: pedido.id,
+									valor: pedido.valor,
+									dataDaEntrega: pedido.dataDaEntrega,
+									comentario: pedido.comentario 
+								})
+								.then(response => pedido.ofertaEnviada = true)
+								.catch(error => {
+									error.response.data.errors.forEach(error => {
+										pedido.erros[error.field] = error.defaultMessage;
+										
+										
+										
+									})
+								})
+							}
+						}
+				});
+
+			}
+		</script>
+		
 	</body>
 
 </html>

@@ -14,6 +14,7 @@ import br.com.alura.mvc.mudi.model.StatusPedido;
 
 @Repository
 public interface PedidoRepository extends JpaRepository<Pedido, Long> {
+
     @Cacheable("home")
     List<Pedido> findByStatus(StatusPedido status, Pageable sort);
 
